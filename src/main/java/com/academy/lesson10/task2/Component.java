@@ -16,7 +16,7 @@ package com.academy.lesson10.task2;
         - перекрыть метод draw3D у Label
         - продемонстрировать работу метода draw3D(); во всех компонентах*/
 
-import com.academy.lesson10.task1.VisualComponent;
+import com.academy.lesson10.task2.VisualComponent;
 
 public class Component implements VisualComponent {
     protected int xPosition;
