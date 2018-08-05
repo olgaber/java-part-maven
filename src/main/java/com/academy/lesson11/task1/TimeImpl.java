@@ -2,9 +2,9 @@ package com.academy.lesson11.task1;
 
 public class TimeImpl implements Time {
 
-    int h;
-    int m;
-    int s;
+    private int h;
+    private int m;
+    private int s;
 
     public TimeImpl() {
     }
