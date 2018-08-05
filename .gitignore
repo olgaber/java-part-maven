@@ -80,3 +80,7 @@ hs_err_pid*
 
 # JIRA plugin
 atlassian-ide-plugin.xml
+
+java-part-maven.iml
+pom.xml
+testng.xml
