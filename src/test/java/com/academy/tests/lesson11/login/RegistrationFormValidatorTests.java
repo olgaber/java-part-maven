@@ -2,25 +2,25 @@ package com.academy.tests.lesson11.login;
 
 import com.academy.fx.model.RegistrationForm;
 import com.academy.fx.validator.*;
-import com.academy.lesson11.login.FormValidationException;
 import org.testng.Assert;
 import org.testng.annotations.Test;
-
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 
 public class RegistrationFormValidatorTests {
 
     //tests data
 
     private String[] validPasswords = {"1qweEtyuiq", "123Qwerty", "Azerty12!", "R421ghjk"};
-    private String[] invalidPasswords = {"", "12dW!", "FgsasGFH", "123gfhfjk", "WERET2ET1"};
+    private String[][] invalidPasswords = {
+            {"", "Empty Password"},
+            {"12dW!", "Password is too short"},
+            {"FgsasGFH", "Password must contain digit"},
+            {"123gfhfjk", "Password must contain upper symbols"},
+            {"WERET2ET1", "Password must contain lower symbols"}};
     private String existingEmail = "test@mail.ru";
     private String validEmail = "test@yahoo.com";
     private String invalidEmail = "@sad@sds@,.com";
     private String emptyString = "";
-
+    private  String email = "test@mail.ru";
 
     private RegistrationValidator validator = new RegistrationValidator();
 
@@ -33,144 +33,122 @@ public class RegistrationFormValidatorTests {
 
     //tests
     @Test
-    public void testFirstNameValidation() throws FormValidationException{
+    public void testFirstNameValidation() {
+
         registrationForm.withFirstName("First Name", emptyString);
         boolean isValid = validator.validate(registrationForm);
-        if (!isValid){
-            Assert.assertFalse(isValid);
-            //         String msgError = validator.getMsgError();
-            //         System.out.println(msgError);
-            //       throw new FormValidationException();
-        }
+        Assert.assertFalse(isValid);
+        String msgError = validator.getMsgError();
+        System.out.println("test 1: " + msgError);
     }
 
     @Test
-    public void testLastNameValidation() throws FormValidationException{
+    public void testLastNameValidation() {
+
         registrationForm.withLastName("Last Name", emptyString);
-        boolean isValid = validator.validate(registrationForm);
-        if (!isValid){
 
-//            String msgError = validator.getMsgError();
-//            System.err.println(msgError);
-            Assert.assertFalse(isValid);
-//            throw new NameValidationException();
-        }
+        boolean isValid = validator.validate(registrationForm);
+
+        Assert.assertFalse(isValid);
+        String msgError = validator.getMsgError();
+        System.err.println("test 2: " + msgError);
     }
 
     @Test
-    public void testEmailValidation(String mail) {
+    public void testEmailValidation() {
         //valid email
-        final Pattern pattern = Pattern.compile("^[\\w%+\\-]+@[A-Za-z\\-]+\\.[A-Za-z]{2,4}$");
-        final Matcher matcher = pattern.matcher(mail);
-        Assert.assertTrue(matcher.find());
+        registrationForm.withMail("Email", email);
+        boolean isValid =  validator.validate(registrationForm);
+        Assert.assertTrue(isValid);
 
         //empty email
-        registrationForm.withMail("Email", validEmail);
-        boolean isValid = validator.validate(registrationForm);
-        Assert.assertTrue(isValid);
+
+        boolean isValid1 = validator.validate(registrationForm);
+        Assert.assertTrue(isValid1);
+        String msgError = validator.getMsgError();
+        System.err.println("test 3.1:" + msgError);
 
         //invalid email
         registrationForm.withMail("Email", invalidEmail);
-        isValid = validator.validate(registrationForm);
-        Assert.assertFalse(isValid);
-
+        boolean isValid2 = validator.validate(registrationForm);
+        Assert.assertFalse(isValid2);
+        msgError = validator.getMsgError();
+        System.err.println("test 3.2:" + msgError);
     }
 
     @Test
-    public void testPasswordValidation() throws FormValidationException {
+    public void testPasswordValidation() {
 
         //valid passwords
         for (int i = 0; i < validPasswords.length; i++) {
             registrationForm.withConfirmPassword("Password", validPasswords[i]);
             registrationForm.withPassword("Password", validPasswords[i]);
             boolean isValid = validator.validate(registrationForm);
-            if (!isValid){
-
-                String msgError = validator.getMsgError();
-                System.err.println(msgError);
-                throw new FormValidationException();
-            }
             Assert.assertTrue(isValid);
         }
-        //invalid passwords
+
+//        //invalid passwords
         for (int i = 0; i < invalidPasswords.length; i++) {
+            for (int j = 0; j < invalidPasswords[i].length; j++) {
 
-            //invalid passwords
-            registrationForm.withPassword("Password", invalidPasswords[i]);
-            boolean isValid = validator.validate(registrationForm);
-            if (!isValid){
-//                String msgError = validator.getMsgError();
-//                System.err.println(msgError);
-                Assert.assertFalse(isValid);
-//                throw new FormValidationException();
+                //invalid passwords
+                registrationForm.withPassword("Password", invalidPasswords[i][j]);
+                boolean isValid = validator.validate(registrationForm);
+                Assert.assertTrue(!isValid);
+                String msgError = invalidPasswords[i][j] + "\t";
+                System.out.print(msgError);
             }
-
+            System.out.println();
         }
+
         //password mismatch
         registrationForm.withPassword("Password", "1qweEtyuiq");
         registrationForm.withConfirmPassword("Password", "1qweEtyui");
         boolean isValid = validator.validate(registrationForm);
-        if (!isValid){
 
-//                String msgError = validator.getMsgError();
-//                System.err.println(msgError);
-            Assert.assertFalse(isValid);
-//                throw new FormValidationException();
-        }
+        String msgError = validator.getMsgError();
+        System.err.println(msgError);
+        Assert.assertFalse(isValid);
     }
 
     @Test
-    public void testConfirmPasswordValidation() throws FormValidationException {
+    public void testConfirmPasswordValidation(){
 
-        //valid passwords
-        for (int i = 1; i < validPasswords.length; i++) {
 
-            registrationForm.withPassword("Password", validPasswords[i]);
-            registrationForm.withConfirmPassword("Password", validPasswords[i]);
-            boolean isValid = validator.validate(registrationForm);
-            if (!isValid){
-
-                String msgError = validator.getMsgError();
-                System.err.println(msgError);
-                throw new FormValidationException();
-            }
-            Assert.assertTrue(isValid);
-        }
-        //invalid passwords
+       //invalid passwords
         for (int i = 0; i < invalidPasswords.length; i++) {
+            for (int j = 0; j < invalidPasswords[i].length; j++) {
 
-            //invalid passwords
-            registrationForm.withConfirmPassword("Password", invalidPasswords[i]);
-            boolean isValid = validator.validate(registrationForm);
-            if (!isValid){
-
-//                String msgError = validator.getMsgError();
-//                System.err.println(msgError);
-                Assert.assertFalse(isValid);
-//                throw new FormValidationException();
+                //invalid passwords
+                registrationForm.withConfirmPassword("Confirm Password", invalidPasswords[i][j]);
+                boolean isValid = validator.validate(registrationForm);
+                Assert.assertTrue(!isValid);
+                String msgError = invalidPasswords[i][j] + "\t";
+                System.out.print(msgError);
             }
+            System.out.println();
         }
     }
 
     @Test
-    public void testExistenceUserValidatation()throws FormValidationException{
+    public void testExistenceUserValidatation(){
 
-        registrationForm.withMail("Email", validEmail);
+        registrationForm.withMail("Email", email);
         boolean isValid = validator.validate(registrationForm);
 
-        if (validEmail.equals(existingEmail)){
+        if (email.equals(existingEmail)){
 
-            String msgError = validator.getMsgError();//???????
+            String msgError = validator.getMsgError();
             System.err.println(msgError);
-            throw new FormValidationException();
+            System.out.println(isValid);
+            Assert.assertFalse(isValid);
 
         }
         else
             Assert.assertTrue(isValid);
     }
+
 }
-
-
 
 
 
