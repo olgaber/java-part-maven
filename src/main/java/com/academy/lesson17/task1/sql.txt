@@ -1,0 +1,28 @@
+//всех абонентов заданного мобильного оператора
+use test_sql;
+select first_name, last_name, operator.name from abonent, operator, phone_book, operator_number
+where abonent.abonent_id = phone_book.abonent_id
+and phone_book.number = operator_number.number
+and operator_number.operator_id  = operator.operator_id;
+
+//все мобильные номера, выбранного абонента
+use test_sql;
+select number, phone_book.abonent_id from phone_book
+where phone_book.abonent_id = 3
+
+//всех абонентов по списку номеров
+use test_sql;
+select last_name, first_name, number from abonent, phone_book
+where abonent.abonent_id = phone_book.abonent_id
+
+//кол-во мобильных номеров операторов
+use test_sql;
+select operator_number.operator_id, count(operator_number.operator_id)
+from operator_number group by operator_number.operator_id
+
+//оператора с наибольшим кол-во мобильных номеров
+use test_sql;
+select operator_number.operator_id, count(operator_number.operator_id) from operator_number
+group by operator_number.operator_id
+order by count(*) desc
+limit 1
