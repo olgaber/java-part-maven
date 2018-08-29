@@ -2,17 +2,24 @@ package com.academy.tests.lesson20;
 
 import com.academy.lesson18.manager.PropertyManager;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.testng.Assert.fail;
@@ -25,8 +32,11 @@ public class SortTests {
     @BeforeClass(alwaysRun = true)
     public void setUp() throws Exception {
 
-        System.setProperty("webdriver.gecko.driver", propertyManager.getProperty("firefox.driver"));
-        driver = new FirefoxDriver();
+                System.setProperty("webdriver.chrome.driver", propertyManager.getProperty("chrome.driver"));
+        driver = new ChromeDriver();
+
+//        System.setProperty("webdriver.gecko.driver", propertyManager.getProperty("firefox.driver"));
+//        driver = new FirefoxDriver();
 
         baseUrl = propertyManager.getProperty("automation.baseurl");
         WebDriver.Timeouts timeouts = driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
@@ -81,18 +91,54 @@ public class SortTests {
         driver.findElement(By.xpath("//*[@id=\"block_top_menu\"]/ul/li[2]/a")).click();
         driver.findElement(By.xpath("//*[@id=\"layered_id_attribute_group_1\"]")).click();
         new Select(driver.findElement(By.id("selectProductSort"))).selectByVisibleText("Price: Lowest first");
-
+        driver.findElement(By.xpath("//*[@id=\"list\"]/a/i")).click();
+        waitUntilScriptComplete(driver);
         //checks
         //1) присутствуют пять позиций
         String text = driver.findElement(By.xpath("//*[@id=\"center_column\"]/div[3]/div[2]/div[2]")).getText();
         Assert.assertEquals(text, "Showing 1 - 5 of 5 items");
 
         //2) Цены идут по возрастанию: [$16.40, $26.00, $28.98, $30.50, $50.99] (точное значение цены не важно)
+        //String text = driver.findElement(By.xpath("//*[@id=\"center_column\"]/div[3]/div[2]/div[2]")).getText();
+        List<String> actualPrices =
+                driver.findElements(By.cssSelector("#center_column > ul > li > div > div > div.right-block.col-xs-4.col-xs-12.col-md-4 > div > div.content_price.col-xs-5.col-md-12 > span.price.product-price"))
+                //#center_column > ul > li > div > div > div.right-block.col-xs-4.col-xs-12.col-md-4 > div > div.content_price.col-xs-5.col-md-12 > span.price.product-price
+                        .stream()
+                .map(WebElement::getText)
+                .peek(String::trim)
+                .collect(Collectors.toList());
 
+        List<String> expectedPrices = new ArrayList<>(actualPrices);
+        expectedPrices.sort(String::compareTo);
+        System.out.println("actual: " + actualPrices);
+        System.out.println("expected: " + expectedPrices);
+        Assert.assertEquals(actualPrices, expectedPrices);
 
     }
 
-    @AfterClass(alwaysRun = true)
+    private boolean waitUntilScriptComplete(WebDriver driver1) {
+        WebDriverWait wait = new WebDriverWait(driver1, 30, 300);
+
+        // wait for jQuery to load
+        ExpectedCondition<Boolean> jQueryLoad = driver -> {
+            try {
+                return ((Long)((JavascriptExecutor)driver).executeScript("return jQuery.active") == 0);
+            }
+            catch (Exception e) {
+                // no jQuery present
+                return true;
+            }
+        };
+
+        // wait for Javascript to load
+        ExpectedCondition<Boolean> jsLoad = driver -> ((JavascriptExecutor)driver).executeScript("return document.readyState")
+                .toString().equals("complete");
+
+        return wait.until(jQueryLoad) && wait.until(jsLoad);
+    }
+
+
+        @AfterClass(alwaysRun = true)
     public void tearDown() throws Exception {
     driver.quit();
 
